@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Dependencies install করার জন্য package.json কপি করা হচ্ছে
+COPY package.json package-lock.json* ./
+
+RUN npm install
+
+# লোকাল সোর্স কোড কন্টেইনারে কপি করা হচ্ছে
+COPY . .
+
+EXPOSE 3000
+
+# Next.js ডেভেলপমেন্ট সার্ভার চালু করার কমান্ড (Webpack ব্যবহার করে, যা উইন্ডোজে হট-রিলোড সাপোর্ট করে)
+CMD ["npm", "run", "dev", "--", "--webpack"]
+

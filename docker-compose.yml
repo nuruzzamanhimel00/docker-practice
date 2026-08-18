@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - WATCHPACK_POLLING=true # Windows-এ ফাইল চেঞ্জের হট-রিলোড সঠিকভাবে কাজ করানোর জন্য
+      - HOSTNAME=0.0.0.0       # ডকার কন্টেইনারের বাইরে থেকে সংযোগ পাওয়ার জন্য
+      - PORT=3000
+
