@@ -321,6 +321,150 @@ docker compose up
 
 ---
 
+## Docker Hub-এ ইমেজ পুশ করার নির্দেশিকা (Docker Hub Push Guide)
 
+এখানে আপনার লোকাল ইমেজ ডকার হাবে (Docker Hub) পুশ করার সম্পূর্ণ নির্দেশিকা দেওয়া হলো। আপনি আপনার প্রোডাকশন ফাইল (`dockerfile`) অথবা ডেভেলপমেন্ট ফাইল (`Dockerfile.dev`) দিয়ে ইমেজ তৈরি করে তা ডকার হাবে পুশ করতে পারবেন।
 
+---
 
+### ১. ডকার হাবে লগইন করা (Docker Login)
+ইমেজ পুশ করার পূর্বে আপনার ডকার কমান্ড লাইন টুলকে ডকার হাব অ্যাকাউন্টের সাথে কানেক্ট করতে হবে।
+1. ডকার ডেস্কটপ (Docker Desktop) চালু রাখুন।
+2. আপনার টার্মিনালে নিচের কমান্ডটি রান করুন:
+   ```powershell
+   docker login
+   ```
+3. আপনার ডকার হাবের **Username** (যেমন: `nuruzzamanhimel143`) এবং **Password** (বা Access Token) দিয়ে লগইন সম্পন্ন করুন। সফল হলে `Login Succeeded` মেসেজ দেখতে পাবেন।
+
+---
+
+### ২. ডকার ইমেজ বিল্ড করা (Build Docker Image)
+আপনি কোন ফাইলটি দিয়ে ইমেজ তৈরি করতে চান, তার ওপর ভিত্তি করে নিচের যেকোনো একটি কমান্ড ব্যবহার করুন:
+
+#### পদ্ধতি ক: প্রোডাকশন বিল্ড (`dockerfile` ব্যবহার করে)
+আপনি যদি কোনো প্রোডাকশন সার্ভারে ডিপ্লয় করতে চান, তবে স্ট্যান্ডার্ড `dockerfile` ব্যবহার করা উচিত (যা Next.js অ্যাপের স্ট্যান্ডঅ্যালোন অপ্টিমাইজড প্রোডাকশন বিল্ড তৈরি করে)।
+* **কমান্ড:**
+  ```powershell
+  docker build -t nuruzzamanhimel143/my-app:latest .
+  ```
+  *(এখানে কোনো ফাইল উল্লেখ না করায় ডকার স্বয়ংক্রিয়ভাবে রুট ফোল্ডারের `dockerfile` ফাইলটি ব্যবহার করবে।)*
+
+#### পদ্ধতি খ: ডেভেলপমেন্ট বিল্ড (`Dockerfile.dev` ব্যবহার করে)
+আপনি যদি ডেভেলপমেন্ট এনভায়রনমেন্টের কন্টেইনার ইমেজটি ডকার হাবে পুশ করতে চান, তবে `-f` ফ্ল্যাগ দিয়ে ফাইলটি নির্দিষ্ট করে দিন।
+* **কমান্ড:**
+  ```powershell
+  docker build -f Dockerfile.dev -t nuruzzamanhimel143/my-app:latest .
+  ```
+
+---
+
+### ৩. ইমেজ ট্যাগ করা (Tag the Image - ঐচ্ছিক)
+আপনি যদি পূর্বেই কোনো ইমেজ অন্য নামে বিল্ড করে থাকেন (যেমন: `my-app`), তবে সেটিকে ডকার হাবে পুশ করার উপযোগী ইউজারনেম ফরম্যাটে নতুন করে ট্যাগ করতে পারেন:
+* **কমান্ড:**
+  ```powershell
+  docker tag my-app nuruzzamanhimel143/my-app:latest
+  ```
+
+---
+
+### ৪. ডকার হাবে পুশ করা (Push the Image)
+ইমেজটি বিল্ড এবং ট্যাগ করা শেষ হলে নিচের কমান্ড দিয়ে সেটি ডকার হাবে আপলোড (Push) করে দিন:
+* **কমান্ড:**
+  ```powershell
+  docker push nuruzzamanhimel143/my-app:latest
+  ```
+
+পুশ সম্পন্ন হলে আপনার ডকার হাব ড্যাশবোর্ডে (Docker Hub Dashboard) গিয়ে নতুন আপলোড করা ইমেজটি দেখতে পাবেন।
+---
+
+## Docker Hub‑এ পুল ও রান করার নির্দেশিকা (Pull & Run)
+
+### ১. ইমেজ পুল করা
+```powershell
+docker pull nuruzzamanhimel143/my-app:latest
+```
+
+### ২. কন্টেইনার রান করা (প্রোডাকশন)
+```powershell
+docker run -d --name my-app-prod -p 3000:3000 nuruzzamanhimel143/my-app:latest
+```
+
+### ৩. ডেভেলপমেন্ট ইমেজ রান করা (হট‑রিলোড সহ)
+```powershell
+docker run -d --name my-app-dev -p 3000:3000 ^
+  -v "${PWD}:/app" ^
+  -v /app/node_modules ^
+  -e WATCHPACK_POLLING=true ^
+  -e HOSTNAME=0.0.0.0 ^
+  -e PORT=3000 ^
+  nuruzzamanhimel143/my-app:latest
+```
+
+> **মন্তব্য:** `docker run` যে ইমেজ লোকালে নথিভুক্ত না থাকলে ডকার স্বয়ংক্রিয়ভাবে `docker pull` করে দেবে, সেইজন্য পুল কমান্ড অন্যথায় মুক্ত চলবে。
+---
+
+## Dockerfile দিয়ে ইমেজ বিল্ড, .dockerignore এবং ইমেজ/কন্টেইনার ম্যানেজমেন্ট
+
+### ১. Dockerfile লিখে ইমেজ তৈরি করা
+```Dockerfile
+FROM node:latest
+#WORKDIR /app
+COPY . .
+RUN npm install
+EXPOSE 3000
+CMD ["node","index"]
+```
+
+### ২. ইমেজ বিল্ড করার কমান্ড
+```powershell
+docker build -t image-name .
+```
+ইমেজ তৈরি হলে Docker Desktop‑এর **Images** সেকশনে `image-name` নামে দেখাবে।
+
+### ৩. কন্টেইনার চালনা (র‌্যান্ডম পোর্ট ব্যবহার করে)
+```powershell
+# -p 0:3000   → হোস্টে র‌্যান্ডম পোর্ট অবধি ম্যাপ করবে
+docker run -d --name my-container -p 0:3000 image-name
+```
+`docker ps` চালালে হোস্টে কোন পোর্ট ব্যবহার হয়েছে তা দেখা যাবে, যা অন্য কন্টেইনারের পোর্ট কনফ্লিক্ট এড়াতে সহায়ক।
+
+### ৪. .dockerignore ফাইল (gitignore‑এর মতো)
+`.dockerignore`‑এ এমন ফাইল/ডিরেক্টরি যোগ করুন যেগুলো ইমেজে না ঢুকতে চাই:
+```.dockerignore
+node_modules
+*.txt
+```
+
+### ৫. ইমেজ ও কন্টেইনার ডিলিট করা
+```powershell
+# ইমেজের তালিকা
+docker images
+# ইমেজ ডিলিট (সাধারণ)
+docker rmi image-name
+# ইমেজ ডিলিট (ফোর্স)
+docker rmi -f image-name
+
+# কন্টেইনারের তালিকা
+docker ps -a
+# কন্টেইনার ডিলিট (সাধারণ)
+docker rm my-container
+# কন্টেইনার ডিলিট (ফোর্স)
+docker rm -f my-container
+```
+
+### ৬. ইমেজ ভার্সনিং (বহু‑ইমেজ তৈরি এবং রান করা)
+```powershell
+# ভার্সন ১ ইমেজ
+docker build -t basic-app:v1 .
+# ভার্সন ২ ইমেজ
+docker build -t basic-app:v2 .
+# ভার্সন ২ কন্টেইনার চালানো
+docker run --name basic-app-container-v2 -p 5500:5500 basic-app:v2
+```
+
+### ৭. Nodemon (ডেভেলপমেন্টে হট‑রিলোড) ইনস্টল করা
+```powershell
+npm i nodemon
+```
+
+> **মন্তব্য:** এই সেকশনটি Dockerfile‑এ কী লিখতে হবে, কীভাবে ইমেজ বানাতে হয়, র‍্যান্ডম পোর্টে কন্টেইনার চালাতে হয়, `.dockerignore` ব্যবহার, ছবি/কন্টেইনার মুছে ফেলতে হয় এবং ভার্সনিং‑এর প্র্যাকটিসগুলো বর্ণনা করে।
